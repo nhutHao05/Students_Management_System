@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Quản Lý Sinh Viên | VPN Portal</title>
+    <meta name="description"
+        content="Hệ thống quản lý sinh viên an toàn qua VPN - Quản lý sinh viên, giảng viên, lớp học">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loader">
+            <div class="loader-ring"></div>
+            <div class="loader-ring"></div>
+            <div class="loader-ring"></div>
+            <i class="fas fa-shield-halved loader-icon"></i>
+        </div>
+        <p class="loading-text">Đang kết nối VPN bảo mật...</p>
+    </div>
+
+    <!-- Step 1: VPN Connection Modal -->
+    <div class="vpn-modal" id="vpnModal">
+        <div class="vpn-modal-content">
+            <div class="step-indicator">
+                <div class="step active">
+                    <span class="step-num">1</span>
+                    <span class="step-text">Kết nối VPN</span>
+                </div>
+                <div class="step-line"></div>
+                <div class="step">
+                    <span class="step-num">2</span>
+                    <span class="step-text">Đăng nhập</span>
+                </div>
+            </div>
+
+            <div class="vpn-header">
+                <div class="vpn-logo">
+                    <i class="fas fa-shield-halved"></i>
+                </div>
+                <h2>Bước 1: Kết nối VPN Server</h2>
+                <p>Bạn phải kết nối VPN trước khi truy cập hệ thống</p>
+            </div>
+
+            <div class="vpn-status" id="vpnStatus">
+                <div class="status-indicator disconnected">
+                    <span class="status-dot"></span>
+                    <span>Chưa kết nối VPN</span>
+                </div>
+            </div>
+
+            <div class="vpn-form">
+                <div class="input-group">
+                    <i class="fas fa-server"></i>
+                    <input type="text" id="vpnServer" placeholder="VPN Server" value="vpn.university.edu.vn">
+                </div>
+                <button class="btn-connect" id="btnConnect" onclick="connectVPN()">
+                    <i class="fas fa-plug"></i>
+                    <span>Kết nối VPN Server</span>
+                </button>
+            </div>
+
+            <div class="vpn-info">
+                <div class="info-item">
+                    <i class="fas fa-lock"></i>
+                    <span>Mã hóa AES-256</span>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-network-wired"></i>
+                    <span>SSL VPN / IPsec</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 2: Login Modal -->
+    <div class="vpn-modal" id="loginModal">
+        <div class="vpn-modal-content">
+            <div class="step-indicator">
+                <div class="step completed">
+                    <span class="step-num"><i class="fas fa-check"></i></span>
+                    <span class="step-text">Kết nối VPN</span>
+                </div>
+                <div class="step-line active"></div>
+                <div class="step active">
+                    <span class="step-num">2</span>
+                    <span class="step-text">Đăng nhập</span>
+                </div>
+            </div>
+
+            <div class="vpn-header">
+                <div class="vpn-logo" style="background: linear-gradient(135deg, #10b981, #34d399);">
+                    <i class="fas fa-user-lock"></i>
+                </div>
+                <h2>Bước 2: Đăng nhập hệ thống</h2>
+                <p>Nhập tài khoản để truy cập hệ thống quản lý</p>
+            </div>
+
+            <div class="vpn-status" id="loginStatus">
+                <div class="status-indicator connected">
+                    <span class="status-dot"></span>
+                    <span>✅ VPN đã kết nối - Sẵn sàng đăng nhập</span>
+                </div>
+            </div>
+
+            <div class="vpn-form">
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="loginUsername" placeholder="Username">
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-key"></i>
+                    <input type="password" id="loginPassword" placeholder="Password">
+                </div>
+                <button class="btn-connect" id="btnLogin" onclick="loginUser()"
+                    style="background: linear-gradient(135deg, #10b981, #34d399);">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Đăng nhập</span>
+                </button>
+                <button class="btn-disconnect" onclick="disconnectVPNFromLogin()"
+                    style="margin-top: 0.75rem; width: 100%; padding: 0.75rem; background: transparent; border: 1px solid var(--danger); color: var(--danger); border-radius: 10px; cursor: pointer;">
+                    <i class="fas fa-times"></i> Ngắt kết nối VPN
+                </button>
+            </div>
+
+            <div class="vpn-info">
+                <div class="info-item">
+                    <i class="fas fa-shield-halved" style="color: var(--success);"></i>
+                    <span>VPN Active</span>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-server" style="color: var(--success);"></i>
+                    <span id="connectedServer">vpn.university.edu.vn</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Main Application -->
+    <div class="app-container" id="appContainer" style="display: none;">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>EduManager</span>
+                </div>
+                <div class="vpn-badge">
+                    <i class="fas fa-shield-halved"></i>
+                    <span>VPN Active</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="active" onclick="showSection('dashboard')">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Dashboard</span>
+                    </li>
+                    <li onclick="showSection('students')">
+                        <i class="fas fa-user-graduate"></i>
+                        <span>Sinh viên</span>
+                    </li>
+                    <li onclick="showSection('lecturers')">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                        <span>Giảng viên</span>
+                    </li>
+                    <li onclick="showSection('classes')">
+                        <i class="fas fa-school"></i>
+                        <span>Lớp học</span>
+                    </li>
+                    <li onclick="showSection('users')">
+                        <i class="fas fa-users-cog"></i>
+                        <span>Người dùng</span>
+                    </li>
+                    <li onclick="showSection('database')">
+                        <i class="fas fa-database"></i>
+                        <span>Database Schema</span>
+                    </li>
+                    <li onclick="showSection('network')">
+                        <i class="fas fa-network-wired"></i>
+                        <span>Sơ đồ mạng</span>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <div class="user-details">
+                        <span class="user-name">Admin</span>
+                        <span class="user-role">Administrator</span>
+                    </div>
+                </div>
+                <button class="btn-logout" onclick="disconnectVPN()">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="content-header">
+                <div class="header-left">
+                    <button class="btn-menu" onclick="toggleSidebar()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="breadcrumb">
+                        <span>Trang chủ</span>
+                        <i class="fas fa-chevron-right"></i>
+                        <span id="currentPage">Dashboard</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Tìm kiếm...">
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn-icon">
+                            <i class="fas fa-bell"></i>
+                            <span class="badge">3</span>
+                        </button>
+                        <button class="btn-icon">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Section -->
+            <section class="content-section" id="dashboardSection">
+                <div class="section-header">
+                    <h1>Dashboard</h1>
+                    <p>Tổng quan hệ thống quản lý sinh viên</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card" style="--accent: #6366f1;">
+                        <div class="stat-icon">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" data-count="1256">0</span>
+                            <span class="stat-label">Sinh viên</span>
+                        </div>
+                        <div class="stat-trend up">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+12%</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="--accent: #10b981;">
+                        <div class="stat-icon">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" data-count="89">0</span>
+                            <span class="stat-label">Giảng viên</span>
+                        </div>
+                        <div class="stat-trend up">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+5%</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="--accent: #f59e0b;">
+                        <div class="stat-icon">
+                            <i class="fas fa-school"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" data-count="42">0</span>
+                            <span class="stat-label">Lớp học</span>
+                        </div>
+                        <div class="stat-trend">
+                            <i class="fas fa-minus"></i>
+                            <span>0%</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="--accent: #ef4444;">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" data-count="1348">0</span>
+                            <span class="stat-label">Tài khoản</span>
+                        </div>
+                        <div class="stat-trend up">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+8%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="chart-card">
+                        <div class="card-header">
+                            <h3>Thống kê sinh viên theo khoa</h3>
+                            <button class="btn-icon-sm">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="departmentChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="card-header">
+                            <h3>Hoạt động gần đây</h3>
+                            <button class="btn-icon-sm">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                        </div>
+                        <div class="activity-list">
+                            <div class="activity-item">
+                                <div class="activity-icon"
+                                    style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                                    <i class="fas fa-user-plus"></i>
+                                </div>
+                                <div class="activity-info">
+                                    <p>Thêm sinh viên mới <strong>Nguyễn Văn A</strong></p>
+                                    <span>2 phút trước</span>
+                                </div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon"
+                                    style="background: linear-gradient(135deg, #10b981, #34d399);">
+                                    <i class="fas fa-edit"></i>
+                                </div>
+                                <div class="activity-info">
+                                    <p>Cập nhật thông tin lớp <strong>CNTT2023A</strong></p>
+                                    <span>15 phút trước</span>
+                                </div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon"
+                                    style="background: linear-gradient(135deg, #f59e0b, #fbbf24);">
+                                    <i class="fas fa-user-shield"></i>
+                                </div>
+                                <div class="activity-info">
+                                    <p>Tạo tài khoản giảng viên <strong>Trần Thị B</strong></p>
+                                    <span>1 giờ trước</span>
+                                </div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon"
+                                    style="background: linear-gradient(135deg, #ef4444, #f87171);">
+                                    <i class="fas fa-trash"></i>
+                                </div>
+                                <div class="activity-info">
+                                    <p>Xóa tài khoản <strong>user123</strong></p>
+                                    <span>3 giờ trước</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Students Section -->
+            <section class="content-section" id="studentsSection" style="display: none;">
+                <div class="section-header">
+                    <h1>Quản lý Sinh viên</h1>
+                    <p>Danh sách và quản lý thông tin sinh viên</p>
+                </div>
+                <div class="table-card">
+                    <div class="table-header">
+                        <div class="table-search">
+                            <i class="fas fa-search"></i>
+                            <input type="text" placeholder="Tìm sinh viên...">
+                        </div>
+                        <button class="btn-primary" onclick="openModal('addStudent')">
+                            <i class="fas fa-plus"></i>
+                            <span>Thêm sinh viên</span>
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Mã SV</th>
+                                    <th>Họ và tên</th>
+                                    <th>Ngày sinh</th>
+                                    <th>Giới tính</th>
+                                    <th>Lớp</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentsTableBody">
+                                <!-- Data will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Lecturers Section -->
+            <section class="content-section" id="lecturersSection" style="display: none;">
+                <div class="section-header">
+                    <h1>Quản lý Giảng viên</h1>
+                    <p>Danh sách và quản lý thông tin giảng viên</p>
+                </div>
+                <div class="table-card">
+                    <div class="table-header">
+                        <div class="table-search">
+                            <i class="fas fa-search"></i>
+                            <input type="text" placeholder="Tìm giảng viên...">
+                        </div>
+                        <button class="btn-primary" onclick="openModal('addLecturer')">
+                            <i class="fas fa-plus"></i>
+                            <span>Thêm giảng viên</span>
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Mã GV</th>
+                                    <th>Họ và tên</th>
+                                    <th>Khoa</th>
+                                    <th>Email</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lecturersTableBody">
+                                <!-- Data will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Classes Section -->
+            <section class="content-section" id="classesSection" style="display: none;">
+                <div class="section-header">
+                    <h1>Quản lý Lớp học</h1>
+                    <p>Danh sách các lớp học trong hệ thống</p>
+                </div>
+                <div class="classes-grid" id="classesGrid">
+                    <!-- Data will be populated by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Users Section -->
+            <section class="content-section" id="usersSection" style="display: none;">
+                <div class="section-header">
+                    <h1>Quản lý Người dùng</h1>
+                    <p>Quản lý tài khoản người dùng hệ thống</p>
+                </div>
+                <div class="table-card">
+                    <div class="table-header">
+                        <div class="table-search">
+                            <i class="fas fa-search"></i>
+                            <input type="text" placeholder="Tìm người dùng...">
+                        </div>
+                        <button class="btn-primary" onclick="openModal('addUser')">
+                            <i class="fas fa-plus"></i>
+                            <span>Thêm người dùng</span>
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Trạng thái</th>
+                                    <th>Ngày tạo</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <!-- Data will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Database Schema Section -->
+            <section class="content-section" id="databaseSection" style="display: none;">
+                <div class="section-header">
+                    <h1>Database Schema</h1>
+                    <p>Cấu trúc cơ sở dữ liệu hệ thống</p>
+                </div>
+                <div class="schema-container">
+                    <div class="schema-card">
+                        <div class="schema-header users-header">
+                            <i class="fas fa-users"></i>
+                            <h3>USERS</h3>
+                        </div>
+                        <div class="schema-body">
+                            <div class="schema-field pk">
+                                <span class="field-name">user_id</span>
+                                <span class="field-type">INT</span>
+                                <span class="field-key">PK</span>
+                            </div>
+                            <div class="schema-field">
+                                <span class="field-name">username</span>
+                                <span class="field-type">VARCHAR(50)</span>
+                            </div>
+                            <div class="schema-field">
+                                <span class="field-name">password_hash</span>
+                                <span class="field-type">VARCHAR(255)</span>
+                            </div>
+                            <div class="schema-field">
+                                <span class="field-name">email</span>
+                                <span class="field-type">VARCHAR(100)</span>
+                            </div>
+                            <div class="schema-field">
+                                <span class="field-name">role</span>
+                                <span class="field-type">ENUM</span>
+                            </div>
+                            <div class="schema-field">
+                                <span class="field-name">created_at</span>
+                                <span class="field-type">DATETIME</span>
+                            </div>
+                            <div class="schema-field">
+                                <span class="field-name">status</span>
+                                <span class="field-type">ENUM</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="schema-card">
+                        <div class="schema-header students-header">
+                            <i class="fas fa-user-graduate"></i>
+                            <h3>STUDENTS</h3>
+                        </div>
+                        <div class="schema-body">
+                            <div class="schema-field pk">
+                                <span class="field-name">student_id</span>
+                                <span class="field-type">INT</span>
+                                <span class="field-key">PK</span>
+                            </div>
+                            <div class="schema-field fk">
+                                <span class="field-name">user_id</span>
+                                <span class="field-type">INT</span>
+                                <span class="field-key">FK</span>
+                            </div>
+                            <div class="schema-field">
+                                <span class="field-name">student_code</span>
+                                <span class="field-type">VARCHAR(20)</span>
+                            </div>
+                            <div class="schema-field">
+                                <span class="field-name">full_name</span>
+                                <span class="field-type">VARCHAR(100)</span>
+                            </div>
+                            <div class="schema-field">
+                                <span class="field-name">date_of_birth</span>
+                                <span class="field-type">DATE</span>
+                            </div>
+                            <div class="schema-field">
+                                <span class="field-name">gender</span>
+                                <span class="field-type">ENUM</span>
+                            </div>
+                            <div class="schema-field fk">
+                                <span class="field-name">class_id</span>
+                                <span class="field-type">INT</span>
+                                <span class="field-key">FK</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="schema-card">
+                        <div class="schema-header lecturers-header">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                            <h3>LECTURERS</h3>
+                        </div>
+                        <div class="schema-body">
+                            <div class="schema-field pk">
+                                <span class="field-name">lecturer_id</span>
+                                <span class="field-type">INT</span>
+                                <span class="field-key">PK</span>
+                            </div>
+                            <div class="schema-field fk">
+                                <span class="field-name">user_id</span>
+                                <span class="field-type">INT</span>
+                                <span class="field-key">FK</span>
+                            </div>
+                            <div class="schema-field">
+                                <span class="field-name">lecturer_code</span>
+                                <span class="field-type">VARCHAR(20)</span>
+                            </div>
+                            <div class="schema-field">
+                                <span class="field-name">full_name</span>
+                                <span class="field-type">VARCHAR(100)</span>
+                            </div>
+                            <div class="schema-field">
+                                <span class="field-name">department</span>
+                                <span class="field-type">VARCHAR(100)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="schema-card">
+                        <div class="schema-header classes-header">
+                            <i class="fas fa-school"></i>
+                            <h3>CLASSES</h3>
+                        </div>
+                        <div class="schema-body">
+                            <div class="schema-field pk">
+                                <span class="field-name">class_id</span>
+                                <span class="field-type">INT</span>
+                                <span class="field-key">PK</span>
+                            </div>
+                            <div class="schema-field">
+                                <span class="field-name">class_name</span>
+                                <span class="field-type">VARCHAR(50)</span>
+                            </div>
+                            <div class="schema-field fk">
+                                <span class="field-name">course_id</span>
+                                <span class="field-type">INT</span>
+                                <span class="field-key">FK</span>
+                            </div>
+                            <div class="schema-field fk">
+                                <span class="field-name">lecturer_id</span>
+                                <span class="field-type">INT</span>
+                                <span class="field-key">FK</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="schema-card">
+                        <div class="schema-header courses-header">
+                            <i class="fas fa-book"></i>
+                            <h3>COURSES</h3>
+                        </div>
+                        <div class="schema-body">
+                            <div class="schema-field pk">
+                                <span class="field-name">course_id</span>
+                                <span class="field-type">INT</span>
+                                <span class="field-key">PK</span>
+                            </div>
+                            <div class="schema-field">
+                                <span class="field-name">course_code</span>
+                                <span class="field-type">VARCHAR(20)</span>
+                            </div>
+                            <div class="schema-field">
+                                <span class="field-name">course_name</span>
+                                <span class="field-type">VARCHAR(100)</span>
+                            </div>
+                            <div class="schema-field">
+                                <span class="field-name">credits</span>
+                                <span class="field-type">INT</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relationships-card">
+                    <h3><i class="fas fa-link"></i> Database Relationships</h3>
+                    <div class="relationship-diagram">
+                        <div class="relationship-item">
+                            <span class="table-name">STUDENTS.user_id</span>
+                            <i class="fas fa-arrow-right"></i>
+                            <span class="table-name">USERS.user_id</span>
+                        </div>
+                        <div class="relationship-item">
+                            <span class="table-name">LECTURERS.user_id</span>
+                            <i class="fas fa-arrow-right"></i>
+                            <span class="table-name">USERS.user_id</span>
+                        </div>
+                        <div class="relationship-item">
+                            <span class="table-name">STUDENTS.class_id</span>
+                            <i class="fas fa-arrow-right"></i>
+                            <span class="table-name">CLASSES.class_id</span>
+                        </div>
+                        <div class="relationship-item">
+                            <span class="table-name">CLASSES.course_id</span>
+                            <i class="fas fa-arrow-right"></i>
+                            <span class="table-name">COURSES.course_id</span>
+                        </div>
+                        <div class="relationship-item">
+                            <span class="table-name">CLASSES.lecturer_id</span>
+                            <i class="fas fa-arrow-right"></i>
+                            <span class="table-name">LECTURERS.lecturer_id</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Network Diagram Section -->
+            <section class="content-section" id="networkSection" style="display: none;">
+                <div class="section-header">
+                    <h1>Sơ đồ mạng VPN - Kiến trúc hệ thống</h1>
+                    <p>Mô hình bảo mật truy cập hệ thống quản lý sinh viên</p>
+                </div>
+
+                <div class="network-diagram">
+                    <!-- Layer 1: Users Zone -->
+                    <div class="network-layer internet-layer">
+                        <div class="layer-label">🌐 INTERNET ZONE - Người dùng từ xa</div>
+                        <div class="network-nodes">
+                            <div class="network-node remote-user">
+                                <div class="node-icon" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                                    <i class="fas fa-user-graduate"></i>
+                                </div>
+                                <span><strong>Sinh viên (SV)</strong></span>
+                                <small style="color: var(--text-muted); font-size: 0.75rem;">Laptop / PC /
+                                    Mobile</small>
+                            </div>
+                            <div class="network-node remote-user">
+                                <div class="node-icon" style="background: linear-gradient(135deg, #10b981, #34d399);">
+                                    <i class="fas fa-chalkboard-teacher"></i>
+                                </div>
+                                <span><strong>Giảng viên (GV)</strong></span>
+                                <small style="color: var(--text-muted); font-size: 0.75rem;">Laptop / PC /
+                                    Mobile</small>
+                            </div>
+                            <div class="network-node remote-user">
+                                <div class="node-icon" style="background: linear-gradient(135deg, #ef4444, #f87171);">
+                                    <i class="fas fa-user-shield"></i>
+                                </div>
+                                <span><strong>Quản trị (Admin)</strong></span>
+                                <small style="color: var(--text-muted); font-size: 0.75rem;">Laptop / PC /
+                                    Mobile</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Connection: Internet/4G -->
+                    <div class="network-connection vpn-tunnel">
+                        <div class="tunnel-line" style="height: 30px;"></div>
+                        <span class="tunnel-label"
+                            style="background: rgba(239, 68, 68, 0.2); border: 1px dashed var(--danger);">
+                            <i class="fas fa-globe" style="color: var(--danger);"></i>
+                            <span style="color: var(--danger);">Internet / 4G (Không an toàn)</span>
+                        </span>
+                        <div class="tunnel-line" style="height: 30px;"></div>
+                    </div>
+
+                    <!-- Layer 2: DMZ - VPN Gateway -->
+                    <div class="network-layer dmz-layer">
+                        <div class="layer-label">🛡️ DMZ ZONE - VPN Gateway</div>
+                        <div class="network-nodes">
+                            <div class="network-node vpn-gateway" style="border: 2px solid var(--primary);">
+                                <div class="node-icon" style="background: var(--gradient-primary);">
+                                    <i class="fas fa-shield-halved"></i>
+                                </div>
+                                <span><strong>VPN Gateway</strong></span>
+                                <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                                    <span
+                                        style="background: rgba(99, 102, 241, 0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.7rem; color: var(--primary);">SSL
+                                        VPN</span>
+                                    <span
+                                        style="background: rgba(99, 102, 241, 0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.7rem; color: var(--primary);">IPsec</span>
+                                </div>
+                                <small style="color: var(--text-muted); font-size: 0.7rem; margin-top: 0.5rem;">Xác thực
+                                    & Mã hóa kết nối</small>
+                            </div>
+                            <div class="network-node firewall">
+                                <div class="node-icon" style="background: linear-gradient(135deg, #f59e0b, #fbbf24);">
+                                    <i class="fas fa-fire"></i>
+                                </div>
+                                <span><strong>Firewall</strong></span>
+                                <small style="color: var(--text-muted); font-size: 0.7rem;">Lọc traffic & Bảo vệ</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Connection: VPN Tunnel Encrypted -->
+                    <div class="network-connection vpn-tunnel">
+                        <div class="tunnel-line"></div>
+                        <span class="tunnel-label">
+                            <i class="fas fa-lock"></i> VPN Tunnel (AES-256 Encrypted)
+                        </span>
+                    </div>
+
+                    <!-- Layer 3: Private Network / LAN -->
+                    <div class="network-layer internal-layer">
+                        <div class="layer-label">🏢 PRIVATE NETWORK / LAN - Nội bộ (Không public Internet)</div>
+                        <div class="network-nodes">
+                            <div class="network-node web-server" style="border: 2px solid var(--success);">
+                                <div class="node-icon"
+                                    style="background: linear-gradient(135deg, var(--success), #34d399);">
+                                    <i class="fas fa-server"></i>
+                                </div>
+                                <span><strong>Web/App Server</strong></span>
+                                <span
+                                    style="background: rgba(16, 185, 129, 0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.7rem; color: var(--success); margin-top: 0.25rem;">SMS
+                                    Backend</span>
+                                <small style="color: var(--text-muted); font-size: 0.7rem; margin-top: 0.5rem;">Xử lý
+                                    nghiệp vụ & Request</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Connection: Private Only -->
+                    <div class="network-connection private-conn">
+                        <div class="conn-line private"></div>
+                        <span class="conn-label">
+                            <i class="fas fa-lock"></i> Private Only - Chỉ Web/App Server truy cập
+                        </span>
+                    </div>
+
+                    <!-- Layer 4: Database Zone -->
+                    <div class="network-layer database-layer">
+                        <div class="layer-label">🔒 DATABASE ZONE - Private (Cách ly hoàn toàn)</div>
+                        <div class="network-nodes">
+                            <div class="network-node database" style="border: 2px solid var(--warning);">
+                                <div class="node-icon"
+                                    style="background: linear-gradient(135deg, var(--warning), #fbbf24);">
+                                    <i class="fas fa-database"></i>
+                                </div>
+                                <span><strong>Database Server</strong></span>
+                                <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                                    <span
+                                        style="background: rgba(245, 158, 11, 0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.7rem; color: var(--warning);">PostgreSQL</span>
+                                    <span
+                                        style="background: rgba(245, 158, 11, 0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.7rem; color: var(--warning);">MySQL</span>
+                                </div>
+                                <div class="node-badge">🚫 No Internet Access</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Layer 5: Logs/Monitor/Backup -->
+                    <div class="network-layer"
+                        style="background: rgba(139, 92, 246, 0.1); border: 1px dashed rgba(139, 92, 246, 0.3); margin-top: 1rem;">
+                        <div class="layer-label">📊 LOGS / MONITOR / BACKUP</div>
+                        <div class="network-nodes">
+                            <div class="network-node" style="background: var(--bg-tertiary);">
+                                <div class="node-icon" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                                <span><strong>Log Server</strong></span>
+                                <small style="color: var(--text-muted); font-size: 0.7rem;">Ghi log hoạt động</small>
+                            </div>
+                            <div class="network-node" style="background: var(--bg-tertiary);">
+                                <div class="node-icon" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <span><strong>Monitoring</strong></span>
+                                <small style="color: var(--text-muted); font-size: 0.7rem;">Giám sát hệ thống</small>
+                            </div>
+                            <div class="network-node" style="background: var(--bg-tertiary);">
+                                <div class="node-icon" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <span><strong>Backup</strong></span>
+                                <small style="color: var(--text-muted); font-size: 0.7rem;">Sao lưu & Khôi phục</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Info Cards -->
+                <div class="security-info-cards">
+                    <div class="security-card">
+                        <div class="security-icon" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                            <i class="fas fa-user-lock"></i>
+                        </div>
+                        <h4>Xác thực VPN</h4>
+                        <p>SV/GV/Admin phải xác thực qua VPN Gateway (SSL VPN hoặc IPsec) trước khi truy cập hệ thống
+                            nội bộ</p>
+                    </div>
+                    <div class="security-card">
+                        <div class="security-icon" style="background: linear-gradient(135deg, #10b981, #34d399);">
+                            <i class="fas fa-network-wired"></i>
+                        </div>
+                        <h4>Private Network</h4>
+                        <p>Mạng LAN nội bộ không được public ra Internet. Web/App Server xử lý mọi request từ VPN</p>
+                    </div>
+                    <div class="security-card">
+                        <div class="security-icon" style="background: linear-gradient(135deg, #f59e0b, #fbbf24);">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <h4>Database Isolated</h4>
+                        <p>Database Server (PostgreSQL/MySQL) chỉ cho phép Web/App Server truy cập, hoàn toàn cách ly
+                            Internet</p>
+                    </div>
+                    <div class="security-card">
+                        <div class="security-icon" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);">
+                            <i class="fas fa-shield-virus"></i>
+                        </div>
+                        <h4>Logs & Backup</h4>
+                        <p>Ghi log hoạt động, giám sát real-time và sao lưu dữ liệu định kỳ để đảm bảo an toàn và khôi
+                            phục khi sự cố</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Add Student Modal -->
+    <div class="modal" id="addStudentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-user-graduate"></i> Thêm Sinh viên mới</h2>
+                <button class="btn-close" onclick="closeModal('addStudent')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form class="modal-form" onsubmit="addStudent(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Mã sinh viên</label>
+                        <input type="text" id="studentCode" required placeholder="VD: SV2023001">
+                    </div>
+                    <div class="form-group">
+                        <label>Họ và tên</label>
+                        <input type="text" id="studentName" required placeholder="Nhập họ và tên">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Ngày sinh</label>
+                        <input type="date" id="studentDob" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Giới tính</label>
+                        <select id="studentGender" required>
+                            <option value="">-- Chọn --</option>
+                            <option value="Nam">Nam</option>
+                            <option value="Nữ">Nữ</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Lớp</label>
+                    <select id="studentClass" required>
+                        <option value="">-- Chọn lớp --</option>
+                        <option value="CNTT2023A">CNTT2023A</option>
+                        <option value="CNTT2023B">CNTT2023B</option>
+                        <option value="QTKD2023A">QTKD2023A</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('addStudent')">Hủy</button>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-plus"></i> Thêm sinh viên
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
